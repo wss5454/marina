@@ -29,7 +29,7 @@ Customer-facing service request system for marinas using Wallace Marina Manageme
    docker compose exec api alembic upgrade head
    ```
 
-4. Create test users (optional — also runs automatically when `BOOTSTRAP_USERS=true` in `.env`):
+4. Create test users :
 
    ```bash
    docker compose exec api python -m scripts.bootstrap
@@ -72,12 +72,20 @@ Set at minimum:
 | `JWT_SECRET_KEY` | Long random string |
 | `CORS_ORIGINS` | Your Vercel frontend URL |
 | `PUBLIC_APP_URL` | Frontend URL (emails / links) |
-| `BOOTSTRAP_USERS` | `true` on first deploy to seed test accounts |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Manager login |
-| `TEST_CUSTOMER_EMAIL` / `TEST_CUSTOMER_PASSWORD` | Customer login (includes a test boat) |
+| `BOOTSTRAP_API_KEY` | Secret key for the setup URL below |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Manager login to seed |
+| `TEST_CUSTOMER_EMAIL` / `TEST_CUSTOMER_PASSWORD` | Customer login to seed (includes a test boat) |
 | `WALLACE_UPLOAD_API_KEY` | For CSV upload from Wallace desktop |
 
-The Docker entrypoint runs `alembic upgrade head`, then `python -m scripts.bootstrap`, then starts Uvicorn on `$PORT`. Seeding is idempotent — existing users are not recreated.
+### First-time setup (no custom start command needed)
+
+After the API is live, open this URL once in your browser (replace host and key):
+
+```
+https://YOUR-RENDER-API.onrender.com/api/v1/setup/bootstrap?key=YOUR_BOOTSTRAP_API_KEY
+```
+
+This runs database migrations and seeds test users from the env vars above. It is idempotent — existing users are not recreated. JSON is returned by default; add `&format=html` for a simple results page.
 
 1. Set `WALLACE_UPLOAD_API_KEY` in your Render backend environment.
 2. On the Windows Wallace machine, schedule a task that uploads new CSV exports to:

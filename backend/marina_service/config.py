@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     wallace_export_dir: str = Field(default="/data/wallace_exports", alias="WALLACE_EXPORT_DIR")
     wallace_sync_interval_seconds: int = Field(default=900, alias="WALLACE_SYNC_INTERVAL_SECONDS")
     wallace_upload_api_key: str = Field(default="", alias="WALLACE_UPLOAD_API_KEY")
+    bootstrap_api_key: str = Field(default="", alias="BOOTSTRAP_API_KEY")
 
     @property
     def database_url_sync(self) -> str:

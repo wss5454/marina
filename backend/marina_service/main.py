@@ -5,6 +5,7 @@ from marina_service.config import get_settings
 from marina_service.routers import (
     auth,
     boats,
+    bootstrap,
     labor_codes,
     manager,
     notifications,
@@ -34,6 +35,7 @@ app.include_router(labor_codes.router, prefix=api_prefix)
 app.include_router(notifications.router, prefix=api_prefix)
 app.include_router(sync.router, prefix=api_prefix)
 app.include_router(wallace_exports.router, prefix=api_prefix)
+app.include_router(bootstrap.router, prefix=api_prefix)
 
 
 @app.get("/health")

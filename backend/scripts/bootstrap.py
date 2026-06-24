@@ -7,12 +7,13 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from marina_service.database import async_session_factory
-from scripts.bootstrap_users import run_bootstrap
+from marina_service.services.bootstrap_service import run_bootstrap
 
 
 async def main() -> None:
     async with async_session_factory() as db:
-        await run_bootstrap(db)
+        result = await run_bootstrap(db)
+    print(result.model_dump_json(indent=2))
 
 
 if __name__ == "__main__":
