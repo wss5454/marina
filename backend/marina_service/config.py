@@ -1,7 +1,17 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def normalize_database_url(url: str) -> str:
+    """Render and other hosts often provide postgresql:// without asyncpg driver."""
+    if url.startswith("postgresql://") and "+asyncpg" not in url:
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    if "render.com" in url and "ssl=" not in url:
+        sep = "&" if "?" in url else "?"
+        url = f"{url}{sep}ssl=require"
+    return url
 
 
 class Settings(BaseSettings):
@@ -11,6 +21,11 @@ class Settings(BaseSettings):
         default="postgresql+asyncpg://marina:marina@localhost:5432/marina_portal",
         alias="DATABASE_URL",
     )
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def _normalize_database_url(cls, value: str) -> str:
+        return normalize_database_url(value)
     redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
 
     jwt_secret_key: str = Field(default="change-me", alias="JWT_SECRET_KEY")

@@ -29,7 +29,13 @@ Customer-facing service request system for marinas using Wallace Marina Manageme
    docker compose exec api alembic upgrade head
    ```
 
-4. Create an admin user:
+4. Create test users (optional — also runs automatically when `BOOTSTRAP_USERS=true` in `.env`):
+
+   ```bash
+   docker compose exec api python -m scripts.bootstrap
+   ```
+
+   Or create only an admin:
 
    ```bash
    docker compose exec api python -m scripts.create_admin
@@ -55,6 +61,23 @@ Drop Wallace export CSV files into the shared volume path (inside containers: `/
 
 When Wallace runs on a Windows desktop and the API runs on Render, the cloud cannot access the desktop export folder directly.
 Use **upload-based sync**:
+
+### Render environment variables
+
+Set at minimum:
+
+| Variable | Notes |
+|----------|--------|
+| `DATABASE_URL` | Render Postgres **Internal** URL (`postgresql://...` is auto-converted to `postgresql+asyncpg://`) |
+| `JWT_SECRET_KEY` | Long random string |
+| `CORS_ORIGINS` | Your Vercel frontend URL |
+| `PUBLIC_APP_URL` | Frontend URL (emails / links) |
+| `BOOTSTRAP_USERS` | `true` on first deploy to seed test accounts |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Manager login |
+| `TEST_CUSTOMER_EMAIL` / `TEST_CUSTOMER_PASSWORD` | Customer login (includes a test boat) |
+| `WALLACE_UPLOAD_API_KEY` | For CSV upload from Wallace desktop |
+
+The Docker entrypoint runs `alembic upgrade head`, then `python -m scripts.bootstrap`, then starts Uvicorn on `$PORT`. Seeding is idempotent — existing users are not recreated.
 
 1. Set `WALLACE_UPLOAD_API_KEY` in your Render backend environment.
 2. On the Windows Wallace machine, schedule a task that uploads new CSV exports to:
