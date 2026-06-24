@@ -3,24 +3,31 @@
 from __future__ import annotations
 
 import asyncio
+import html
+import json
 import os
 from pathlib import Path
 from typing import Literal
 
 from alembic import command
 from alembic.config import Config
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from marina_service.auth.password import hash_password
 from marina_service.config import get_settings
+from marina_service.database import get_db
 from marina_service.models.boat import Boat
 from marina_service.models.customer import Customer
 from marina_service.models.enums import UserRole
 from marina_service.models.staff_user import StaffUser
 
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
+
+setup_router = APIRouter(prefix="/setup", tags=["setup"])
 
 
 class UserSeedResult(BaseModel):
@@ -185,3 +192,54 @@ async def run_bootstrap(
         admin=admin,
         customer=customer,
     )
+
+
+def _verify_bootstrap_key(key: str | None, header_key: str | None) -> None:
+    settings = get_settings()
+    if not settings.bootstrap_api_key:
+        raise HTTPException(status_code=503, detail="Bootstrap endpoint not configured")
+    provided = key or header_key
+    if not provided or provided != settings.bootstrap_api_key:
+        raise HTTPException(status_code=401, detail="Invalid bootstrap key")
+
+
+def _render_bootstrap_html(result: BootstrapResult) -> str:
+    payload = html.escape(json.dumps(result.model_dump(), indent=2))
+    status = "Bootstrap complete" if result.ok else "Bootstrap failed"
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{status}</title>
+  <style>
+    body {{ font-family: system-ui, sans-serif; margin: 2rem; line-height: 1.5; }}
+    h1 {{ font-size: 1.25rem; }}
+    pre {{ background: #f4f4f5; padding: 1rem; border-radius: 8px; overflow-x: auto; }}
+  </style>
+</head>
+<body>
+  <h1>{status}</h1>
+  <pre>{payload}</pre>
+</body>
+</html>"""
+
+
+@setup_router.get("/bootstrap", response_model=None)
+async def bootstrap_setup(
+    request: Request,
+    key: str | None = Query(default=None, description="Bootstrap API key"),
+    format: str | None = Query(default=None, alias="format"),
+    db: AsyncSession = Depends(get_db),
+    x_bootstrap_key: str | None = Header(default=None, alias="X-Bootstrap-Key"),
+) -> Response:
+    """Run Alembic migrations and seed test users from environment variables."""
+    _verify_bootstrap_key(key, x_bootstrap_key)
+    result = await run_bootstrap(db)
+
+    wants_html = format == "html" or "text/html" in request.headers.get("accept", "")
+    if wants_html:
+        status_code = 200 if result.ok else 500
+        return HTMLResponse(content=_render_bootstrap_html(result), status_code=status_code)
+
+    return JSONResponse(content=result.model_dump(), status_code=200 if result.ok else 500)
