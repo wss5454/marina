@@ -3,74 +3,65 @@ import Link from "next/link";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { ServicesSection } from "@/components/home/ServicesSection";
-import { MarinaHeader } from "@/components/layout/MarinaHeader";
-import { MarinaPattern } from "@/components/layout/marina-pattern";
-import { WaveDivider } from "@/components/layout/WaveDivider";
+import { MarqueeBand } from "@/components/layout/MarqueeBand";
+import { MarketingHeader } from "@/components/layout/marketing-header";
 import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
-      <MarinaHeader
-        title="Rhode River Marina"
-        subtitle="Service & storage on the Rhode River"
-      >
-        <div className="hidden items-center gap-2 sm:flex">
-          <Button asChild variant="ghost" size="sm" className="text-primary-foreground hover:bg-white/10">
-            <Link href="/availability">Slips & storage</Link>
-          </Button>
-          <Button asChild variant="secondary" size="sm">
-            <Link href="/login">Sign in</Link>
-          </Button>
-        </div>
-      </MarinaHeader>
+      <MarketingHeader />
 
-      <div className="relative">
-        <MarinaPattern className="opacity-50" opacity={0.03} />
-        <HomeHero />
-      </div>
+      <HomeHero />
 
-      <WaveDivider variant="sand" />
+      <MarqueeBand />
 
       <ServicesSection />
 
-      <WaveDivider variant="navy" flip />
-
       <HowItWorks />
 
-      <section className="relative overflow-hidden marina-gradient py-16 text-primary-foreground">
-        <MarinaPattern className="opacity-30" opacity={0.06} />
+      <section className="relative overflow-hidden py-20 md:py-28">
+        <div className="absolute inset-0 marina-gradient opacity-95" />
+        <div className="absolute inset-0 grain" />
         <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6">
-          <h2 className="text-3xl font-bold">Ready to get started?</h2>
-          <p className="mt-3 text-primary-foreground/80">
-            Sign in to manage your boats and work orders, or browse available slips and storage.
+          <p className="section-label mb-4 text-marina-teal">Ready when you are</p>
+          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            Your marina, one portal away
+          </h2>
+          <p className="mx-auto mt-4 max-w-lg text-white/75">
+            Sign in to manage boats and work orders, claim a pre-seeded account, or browse slip and
+            storage availability.
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg" variant="secondary">
+          <div className="mt-10 flex flex-wrap justify-center gap-4">
+            <Button
+              asChild
+              size="lg"
+              className="rounded-full bg-white px-8 text-primary hover:bg-white/90"
+            >
               <Link href="/login">Customer portal</Link>
             </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-white/30 bg-white/10 text-primary-foreground hover:bg-white/20"
+            <Link
+              href="/claim"
+              className="inline-flex h-11 items-center px-6 text-sm font-semibold text-white underline-offset-4 hover:underline"
             >
-              <Link href="/claim">Claim your account</Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-white/30 bg-white/10 text-primary-foreground hover:bg-white/20"
-            >
-              <Link href="/availability">View availability</Link>
-            </Button>
+              Claim your account
+            </Link>
           </div>
         </div>
       </section>
 
-      <footer className="border-t border-border/60 bg-card py-8 text-center text-sm text-muted-foreground">
-        <p>© {new Date().getFullYear()} Rhode River Marina · Service Portal</p>
+      <footer className="border-t border-border/60 bg-card py-10">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 text-center text-sm text-muted-foreground sm:flex-row sm:px-6 sm:text-left">
+          <p>© {new Date().getFullYear()} Rhode River Marina · Service Portal</p>
+          <div className="flex gap-6">
+            <Link href="/availability" className="transition-colors hover:text-foreground">
+              Availability
+            </Link>
+            <Link href="/login" className="transition-colors hover:text-foreground">
+              Sign in
+            </Link>
+          </div>
+        </div>
       </footer>
     </div>
   );

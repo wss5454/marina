@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ArrowRight, Calendar } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -12,102 +13,146 @@ gsap.registerPlugin(ScrollTrigger);
 
 export function HomeHero() {
   const rootRef = useRef<HTMLElement>(null);
+  const imageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced || !rootRef.current) return;
 
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-      tl.from("[data-hero='badge']", { opacity: 0, y: 16, duration: 0.5 })
-        .from("[data-hero='title']", { opacity: 0, y: 24, duration: 0.6 }, "-=0.2")
-        .from("[data-hero='subtitle']", { opacity: 0, y: 20, duration: 0.5 }, "-=0.3")
-        .from("[data-hero='cta']", { opacity: 0, y: 16, stagger: 0.12, duration: 0.45 }, "-=0.2")
-        .from("[data-hero='image']", { opacity: 0, scale: 0.96, duration: 0.7 }, "-=0.4");
+      const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
+      tl.fromTo(
+        "[data-hero='label']",
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.6 }
+      )
+        .fromTo(
+          "[data-hero='line']",
+          { opacity: 0, y: 48, rotateX: 12 },
+          { opacity: 1, y: 0, rotateX: 0, stagger: 0.08, duration: 0.85 },
+          "-=0.35"
+        )
+        .fromTo(
+          "[data-hero='subtitle']",
+          { opacity: 0, y: 24 },
+          { opacity: 1, y: 0, duration: 0.65 },
+          "-=0.45"
+        )
+        .fromTo(
+          "[data-hero='cta']",
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, stagger: 0.1, duration: 0.5 },
+          "-=0.35"
+        )
+        .fromTo(
+          "[data-hero='image']",
+          { opacity: 0, scale: 0.92 },
+          { opacity: 1, scale: 1, duration: 1 },
+          "-=0.7"
+        )
+        .fromTo(
+          "[data-hero='stat']",
+          { opacity: 0, y: 16 },
+          { opacity: 1, y: 0, stagger: 0.08, duration: 0.45 },
+          "-=0.5"
+        );
 
-      gsap.from("[data-hero='stat']", {
-        scrollTrigger: { trigger: rootRef.current, start: "top 80%" },
-        opacity: 0,
-        y: 20,
-        stagger: 0.1,
-        duration: 0.5,
-      });
+      if (imageRef.current) {
+        gsap.to(imageRef.current, {
+          y: -40,
+          ease: "none",
+          scrollTrigger: {
+            trigger: rootRef.current,
+            start: "top top",
+            end: "bottom top",
+            scrub: 1.2,
+          },
+        });
+      }
     }, rootRef);
+
+    requestAnimationFrame(() => ScrollTrigger.refresh());
 
     return () => ctx.revert();
   }, []);
 
   return (
-    <section ref={rootRef} className="relative overflow-hidden">
-      <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-24">
-        <div className="space-y-6">
+    <section ref={rootRef} className="relative overflow-hidden marina-gradient-soft grain">
+      <div className="pointer-events-none absolute -right-32 top-20 h-96 w-96 rounded-full bg-accent/15 blur-3xl" />
+      <div className="pointer-events-none absolute -left-20 bottom-0 h-72 w-72 rounded-full bg-marina-coral/10 blur-3xl" />
+
+      <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-28">
+        <div className="space-y-8">
+          <p data-hero="label" className="section-label">
+            Rhode River · Est. service portal
+          </p>
+
+          <h1 className="space-y-1 text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-[3.5rem] lg:leading-[1.08]">
+            <span data-hero="line" className="block">
+              Boat care that
+            </span>
+            <span data-hero="line" className="block marina-text-gradient">
+              moves with you.
+            </span>
+          </h1>
+
           <p
-            data-hero="badge"
-            className="inline-flex rounded-full bg-accent/15 px-3 py-1 text-sm font-medium text-accent"
+            data-hero="subtitle"
+            className="max-w-lg text-lg leading-relaxed text-muted-foreground"
           >
-            Rhode River Marina · Service Portal
+            Winterization, spring commissioning, and year-round service — submit work orders,
+            track progress, and pay online. Built for owners who are always on the water.
           </p>
-          <h2
-            data-hero="title"
-            className="text-4xl font-bold tracking-tight text-primary sm:text-5xl lg:text-[3.25rem] lg:leading-tight"
-          >
-            Expert boat care,{" "}
-            <span className="marina-text-gradient">on your schedule</span>
-          </h2>
-          <p data-hero="subtitle" className="max-w-xl text-lg text-muted-foreground">
-            Submit winterization, spring commissioning, and year-round service requests online.
-            Track progress, view estimates, and pay invoices — all in one place.
-          </p>
-          <div className="flex flex-wrap gap-3" data-hero="cta">
-            <Button asChild size="lg" variant="accent">
+
+          <div className="flex flex-wrap items-center gap-4" data-hero="cta">
+            <Button asChild size="lg" className="btn-primary-glow rounded-full px-8">
               <Link href="/login">
-                Customer sign in
+                Open customer portal
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link href="/requests/new?form_type=WINTER">
-                <Calendar className="h-4 w-4" />
-                Start work order
-              </Link>
-            </Button>
+            <Link
+              href="/availability"
+              className="text-sm font-semibold text-foreground underline-offset-4 transition-colors hover:text-accent hover:underline"
+            >
+              Browse slips & storage
+            </Link>
           </div>
-          <div className="grid grid-cols-3 gap-4 pt-4">
+
+          <dl className="grid grid-cols-3 gap-6 border-t border-border/60 pt-8">
             {[
-              { value: "40+", label: "Years on the water" },
-              { value: "24h", label: "Typical review time" },
+              { value: "40+", label: "Years on the river" },
+              { value: "24h", label: "Review turnaround" },
               { value: "100%", label: "Online tracking" },
             ].map((stat) => (
-              <div key={stat.label} data-hero="stat" className="text-center sm:text-left">
-                <p className="text-2xl font-bold text-primary">{stat.value}</p>
-                <p className="text-xs text-muted-foreground sm:text-sm">{stat.label}</p>
+              <div key={stat.label} data-hero="stat">
+                <dt className="text-2xl font-bold text-primary lg:text-3xl">{stat.value}</dt>
+                <dd className="mt-1 text-xs text-muted-foreground sm:text-sm">{stat.label}</dd>
               </div>
             ))}
-          </div>
+          </dl>
         </div>
-        <div
-          data-hero="image"
-          className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary/20 via-marina-wave/40 to-accent/20 shadow-xl"
-        >
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-8 text-center">
-            <div className="rounded-full bg-white/60 p-6 backdrop-blur-sm">
-              <svg viewBox="0 0 64 64" className="h-16 w-16 text-primary" aria-hidden="true">
-                <path
-                  fill="currentColor"
-                  d="M8 44 L32 20 L56 44 L48 44 L48 52 L16 52 L16 44 Z M28 36 L36 36 L36 48 L28 48 Z"
-                  opacity="0.3"
-                />
-                <path
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  d="M4 48 Q32 28 60 48"
-                />
-              </svg>
+
+        <div data-hero="image" className="relative w-full lg:ml-auto">
+          <div
+            ref={imageRef}
+            className="relative aspect-[4/3] animate-float overflow-hidden rounded-2xl shadow-2xl shadow-primary/15 ring-1 ring-border/40"
+          >
+            <Image
+              src="/wallace-office.webp"
+              alt="Rhode River Marina office and waterfront"
+              fill
+              className="object-cover"
+              priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-marina-ink/50 via-transparent to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+              <p className="text-sm font-medium text-white/90">Rhode River Marina</p>
+              <p className="text-xs text-white/70">Service, storage & slip management</p>
             </div>
-            <p className="text-sm font-medium text-primary/80">Marina hero image placeholder</p>
-            <p className="text-xs text-muted-foreground">Replace with waterfront photography</p>
           </div>
+          <div className="absolute -bottom-4 -left-4 -z-10 h-full w-full rounded-2xl bg-accent/20" />
         </div>
       </div>
     </section>
