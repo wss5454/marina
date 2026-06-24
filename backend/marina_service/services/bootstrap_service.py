@@ -6,6 +6,7 @@ import asyncio
 import html
 import json
 import os
+import uuid
 from pathlib import Path
 from typing import Literal
 
@@ -24,6 +25,7 @@ from marina_service.models.boat import Boat
 from marina_service.models.customer import Customer
 from marina_service.models.enums import UserRole
 from marina_service.models.staff_user import StaffUser
+from marina_service.services.marina_context import ensure_marina
 
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
@@ -48,17 +50,21 @@ async def ensure_admin_user(
     db: AsyncSession,
     email: str,
     password: str,
+    marina_id: uuid.UUID,
     *,
     first_name: str = "Admin",
     last_name: str = "User",
 ) -> bool:
     """Create admin if missing. Returns True when a new user was created."""
     email = email.strip().lower()
-    r = await db.execute(select(StaffUser).where(StaffUser.email == email))
+    r = await db.execute(
+        select(StaffUser).where(StaffUser.marina_id == marina_id, StaffUser.email == email)
+    )
     if r.scalar_one_or_none():
         return False
     db.add(
         StaffUser(
+            marina_id=marina_id,
             email=email,
             password_hash=hash_password(password),
             first_name=first_name,
@@ -75,6 +81,7 @@ async def ensure_test_customer(
     db: AsyncSession,
     email: str,
     password: str,
+    marina_id: uuid.UUID,
     *,
     first_name: str = "Test",
     last_name: str = "Customer",
@@ -84,11 +91,14 @@ async def ensure_test_customer(
 ) -> bool:
     """Create a claimed customer (and one boat) if missing. Returns True when created."""
     email = email.strip().lower()
-    r = await db.execute(select(Customer).where(Customer.email == email))
+    r = await db.execute(
+        select(Customer).where(Customer.marina_id == marina_id, Customer.email == email)
+    )
     if r.scalar_one_or_none():
         return False
 
     customer = Customer(
+        marina_id=marina_id,
         email=email,
         password_hash=hash_password(password),
         first_name=first_name,
@@ -100,10 +110,12 @@ async def ensure_test_customer(
     await db.flush()
     db.add(
         Boat(
+            marina_id=marina_id,
             customer_id=customer.id,
             make=boat_make,
             model=boat_model,
             year=boat_year,
+            photos=[],
         )
     )
     await db.commit()
@@ -125,11 +137,11 @@ async def run_migrations() -> tuple[Literal["applied", "failed"], str | None]:
         return "failed", str(exc)
 
 
-async def seed_test_users(db: AsyncSession) -> tuple[UserSeedResult, UserSeedResult]:
+async def seed_test_users(db: AsyncSession, marina_id: uuid.UUID) -> tuple[UserSeedResult, UserSeedResult]:
     admin_email = os.environ.get("ADMIN_EMAIL", "").strip()
     admin_password = os.environ.get("ADMIN_PASSWORD", "")
     if admin_email and admin_password:
-        if await ensure_admin_user(db, admin_email, admin_password):
+        if await ensure_admin_user(db, admin_email, admin_password, marina_id):
             admin = UserSeedResult(email=admin_email, status="created")
         else:
             admin = UserSeedResult(email=admin_email, status="already_exists")
@@ -146,6 +158,7 @@ async def seed_test_users(db: AsyncSession) -> tuple[UserSeedResult, UserSeedRes
             db,
             customer_email,
             customer_password,
+            marina_id,
             first_name=os.environ.get("TEST_CUSTOMER_FIRST_NAME", "Test"),
             last_name=os.environ.get("TEST_CUSTOMER_LAST_NAME", "Customer"),
             boat_make=os.environ.get("TEST_CUSTOMER_BOAT_MAKE", "Sea Ray"),
@@ -184,7 +197,8 @@ async def run_bootstrap(
                 customer=UserSeedResult(status="skipped", detail="Migrations failed."),
             )
 
-    admin, customer = await seed_test_users(db)
+    marina = await ensure_marina(db)
+    admin, customer = await seed_test_users(db, marina.id)
     return BootstrapResult(
         ok=True,
         migrations=migration_status,

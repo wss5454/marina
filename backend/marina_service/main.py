@@ -8,7 +8,9 @@ from marina_service.routers import (
     labor_codes,
     manager,
     notifications,
+    payments,
     requests,
+    reservations,
     sync,
     wallace_exports,
 )
@@ -16,7 +18,7 @@ from marina_service.services.bootstrap_service import setup_router
 
 settings = get_settings()
 
-app = FastAPI(title="Marina Service Portal API", version="1.0.0")
+app = FastAPI(title="Marina Service Portal API", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,6 +37,8 @@ app.include_router(labor_codes.router, prefix=api_prefix)
 app.include_router(notifications.router, prefix=api_prefix)
 app.include_router(sync.router, prefix=api_prefix)
 app.include_router(wallace_exports.router, prefix=api_prefix)
+app.include_router(payments.router, prefix=api_prefix)
+app.include_router(reservations.router, prefix=api_prefix)
 app.include_router(setup_router, prefix=api_prefix)
 
 

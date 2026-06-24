@@ -56,6 +56,9 @@ class Settings(BaseSettings):
     wallace_sync_interval_seconds: int = Field(default=900, alias="WALLACE_SYNC_INTERVAL_SECONDS")
     wallace_upload_api_key: str = Field(default="", alias="WALLACE_UPLOAD_API_KEY")
     bootstrap_api_key: str = Field(default="", alias="BOOTSTRAP_API_KEY")
+    default_marina_slug: str = Field(default="rhode-river", alias="DEFAULT_MARINA_SLUG")
+    gravity_stub_mode: bool = Field(default=True, alias="GRAVITY_STUB_MODE")
+    gravity_webhook_secret: str = Field(default="change-me-webhook", alias="GRAVITY_WEBHOOK_SECRET")
 
     @property
     def database_url_sync(self) -> str:
